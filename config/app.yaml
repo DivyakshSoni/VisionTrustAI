@@ -1,0 +1,25 @@
+application:
+  name: "VisionTrust AI"
+  version: "0.1.0"
+  environment: "development"
+  execution_mode: "offline"
+
+service:
+  host: "127.0.0.1"
+  port: 8000
+  log_level: "INFO"
+
+paths:
+  data_root: "./data"
+  model_root: "./models"
+  artifact_root: "./artifacts"
+  log_root: "./logs"
+
+modules:
+  dataguard: true
+  modelshield: true
+  inferencevault: true
+  driftlens: true
+  sentinelcore: true
+  redforge: true
+  assurancehub: true
