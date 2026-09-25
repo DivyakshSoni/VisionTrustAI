@@ -1,10 +1,55 @@
+# Dependencies & Build Artefacts
 node_modules/
-__pycache__/
-*.pyc
-.env
-.venv
-venv/
-env/
-.DS_Store
 dist/
 build/
+*.egg-info/
+
+# Python Cache & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+ENV/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Theory, Guides, PDFs & Research Notes (Keep main repo clean)
+*.pdf
+*.docx
+*.doc
+*.pptx
+*.ppt
+resources/
+theory/
+docs/theory/
+SIH_VisionTrustAI_Complete_Guide.txt
+*Guide*.txt
+*guide*.txt
+*.txt
+!requirements.txt
+
+# AI Assistant & IDE Configuration
+.agent/
+.agents/
+skills/
+.gemini/
+.claude/
+.cursor/
+.vscode/
+.idea/
+
+# OS Generated Files & Logs
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log

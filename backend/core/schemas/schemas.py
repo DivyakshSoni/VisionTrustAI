@@ -43,7 +43,7 @@ class InferenceRecordSchema(BaseModel):
     preprocessing_config_hash: str
     inference_config_hash: str
     output: Dict[str, Any]
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     sequence_nonce: str
     record_hash: str
     signature: str

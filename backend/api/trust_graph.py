@@ -37,6 +37,6 @@ def get_propagation_history():
     """
     edges = []
     for node in NODES_DB.values():
-        for downstream_id in node.propagated_to:
-            edges.append({"source": node.node_id, "target": downstream_id})
+        for downstream in node.downstream_edges:
+            edges.append({"source": node.id, "target": downstream.id})
     return {"edges": edges}
