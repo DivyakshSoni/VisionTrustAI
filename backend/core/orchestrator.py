@@ -84,19 +84,121 @@ def run_dataset_assurance(dataset_paths: List[str], batch_node: TrustNode, force
         
     return batch_node.trust
 
-def run_demo_pipeline():
+    return batch_node.trust
+
+def reset_pipeline():
     """
-    Runs the end-to-end demo pipeline to populate the databases.
+    Resets the trust graph and findings database to a clean baseline state.
     """
-    # Create the graph
+    NODES_DB.clear()
+    FINDINGS_DB.clear()
+    
     contributor = create_node("contributor")
+    contributor.trust = 0.85
+    
     dataset_batch = create_node("dataset_batch")
+    dataset_batch.trust = 0.80
+    
     model = create_node("model")
+    model.trust = 0.75
+    
+    inference_service = create_node("inference_service")
+    inference_service.trust = 0.80
     
     link_nodes(contributor, dataset_batch)
     link_nodes(dataset_batch, model)
+    link_nodes(model, inference_service)
     
-    # Run assurance (mocking an attack to show distrust propagation)
-    run_dataset_assurance(["dummy_img1.jpg", "dummy_img2.jpg"], dataset_batch, force_poison=True)
+    return {"status": "Pipeline reset to clean operational baseline.", "nodes_count": len(NODES_DB)}
+
+def run_demo_pipeline(attack_type: str = "duplicate_flood"):
+    """
+    Runs the end-to-end demo pipeline to populate the databases.
+    Supports: 'duplicate_flood' (DataGuard), 'backdoor' (ModelShield), 'drift' (DriftLens).
+    """
+    if not NODES_DB:
+        reset_pipeline()
+        
+    nodes = list(NODES_DB.values())
+    dataset_batch = next((n for n in nodes if n.type == "dataset_batch"), None)
+    model = next((n for n in nodes if n.type == "model"), None)
+    inference_node = next((n for n in nodes if n.type == "inference_service"), None)
     
-    return {"status": "Pipeline executed. Check /graph/nodes and /findings APIs."}
+    if not dataset_batch or not model:
+        reset_pipeline()
+        nodes = list(NODES_DB.values())
+        dataset_batch = next((n for n in nodes if n.type == "dataset_batch"), None)
+        model = next((n for n in nodes if n.type == "model"), None)
+        inference_node = next((n for n in nodes if n.type == "inference_service"), None)
+
+    if attack_type == "backdoor":
+        # ModelShield detects backdoor trigger pattern
+        detector_id = "modelshield_cleanse"
+        canary_passed = canary_gate.has_passed(detector_id)
+        if detector_id not in canary_gate.canary_results:
+            canary_passed = canary_gate.run_canary_test(detector_id, lambda x: True, None, True)
+            
+        old_trust = model.trust
+        ev = Evidence(
+            detector_id=detector_id,
+            direction="crypto_failure",
+            weight=1.0,
+            architecture_family="adversarial_optimization",
+            canary_passed=canary_passed
+        )
+        update_trust(model, [ev])
+        
+        finding = FindingSchema(
+            finding_id=f"FND-{uuid.uuid4().hex[:6]}",
+            module="ModelShield",
+            affected_asset=AssetRef(type="model", id=model.id),
+            reason="Abnormally small L1 perturbation mask detected by Neural Cleanse Lite. Backdoor trigger confirmed.",
+            evidence={"target_class": "civilian_vehicle", "trigger_size_px": 12, "anomaly_index": 3.42},
+            trust_score_before=old_trust,
+            trust_score_after=model.trust,
+            confidence=0.98,
+            severity="critical",
+            recommended_action="immediate_quarantine",
+            limitations="Assumes single-target backdoor injection."
+        )
+        FINDINGS_DB.append(finding)
+        return {"status": "ModelShield Backdoor Attack simulated. Model crypto-locked.", "attack": attack_type}
+        
+    elif attack_type == "drift":
+        # DriftLens detects environmental distribution shift
+        detector_id = "driftlens_psi"
+        canary_passed = canary_gate.has_passed(detector_id)
+        if detector_id not in canary_gate.canary_results:
+            canary_passed = canary_gate.run_canary_test(detector_id, lambda x: True, None, True)
+            
+        target_node = inference_node or model
+        old_trust = target_node.trust
+        ev = Evidence(
+            detector_id=detector_id,
+            direction="disconfirm",
+            weight=0.15,
+            architecture_family="distributional_statistics",
+            canary_passed=canary_passed
+        )
+        update_trust(target_node, [ev])
+        
+        finding = FindingSchema(
+            finding_id=f"FND-{uuid.uuid4().hex[:6]}",
+            module="DriftLens",
+            affected_asset=AssetRef(type="inference_service", id=target_node.id),
+            reason="Population Stability Index (PSI = 0.28 > 0.20) indicates significant environmental drift in target camera angle and sandstorm fog.",
+            evidence={"psi_score": 0.28, "mmd_distance": 0.142, "baseline_window": "2026-Q1"},
+            trust_score_before=old_trust,
+            trust_score_after=target_node.trust,
+            confidence=0.91,
+            severity="medium",
+            recommended_action="recalibrate_sensors",
+            limitations="Drift metrics require minimum 200 frame sample size."
+        )
+        FINDINGS_DB.append(finding)
+        return {"status": "DriftLens Environmental Shift detected.", "attack": attack_type}
+
+    else:
+        # Default: DataGuard Duplicate Flood attack
+        run_dataset_assurance(["dummy_img1.jpg", "dummy_img2.jpg"], dataset_batch, force_poison=True)
+        return {"status": "DataGuard Poisoning attack executed. Distrust propagated.", "attack": "duplicate_flood"}

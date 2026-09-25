@@ -12,14 +12,17 @@ def verify_inference_record(
     """
     Re-checks the hash, signature, and optionally the Merkle path.
     """
-    # 1. Recompute the hash
+    ts = record.timestamp
+    if not isinstance(ts, str):
+        ts = ts.isoformat().replace("+00:00", "") + "Z"
+
     recomputed_hash = hash_record(
         input_hash=record.input_hash,
         model_digest=record.model_digest,
         preproc_hash=record.preprocessing_config_hash,
         inf_hash=record.inference_config_hash,
         output=record.output,
-        timestamp=record.timestamp.isoformat() + "Z" if not isinstance(record.timestamp, str) else record.timestamp,
+        timestamp=ts,
         nonce=record.sequence_nonce
     )
     

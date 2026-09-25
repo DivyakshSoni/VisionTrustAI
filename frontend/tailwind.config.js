@@ -7,11 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        dark: '#0f172a',
-        darker: '#020617',
-        primary: '#3b82f6',
-        accent: '#10b981',
-        danger: '#ef4444'
+        canvas: '#0b0f15',
+        surface: '#121722',
+        'surface-elevated': '#171e2c',
+        'border-subtle': '#212936',
+        'border-strong': '#334155',
+        'text-primary': '#f8fafc',
+        'text-secondary': '#cbd5e1',
+        'text-muted': '#94a3b8',
+      },
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"SF Mono"', 'Menlo', 'Consolas', 'monospace'],
       }
     },
   },
